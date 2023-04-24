@@ -1,25 +1,42 @@
 <html>
     <head>
-        <!-- Need to include jQuery! -->
-        <script src="nui://game/ui/jquery.js" type="text/javascript"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.1.1/howler.min.js" type="text/javascript"></script>
-        <script>
-            var audioPlayer = null;
-            // Listen for NUI Messages.
-            window.addEventListener('message', function(event) {
-                // Check for playSound transaction
-                if (event.data.transactionType == "playSound") {
-				
-                  if (audioPlayer != null) {
-                    audioPlayer.pause();
-                  }
+    </head>
+    <body>
+        <script type="text/javascript">
+            let audioPlayers = {};
+            
+            let eventHandlers = {
+                playSound: function(data) {
+                    if (audioPlayers[data.transactionId] != undefined) audioPlayers[data.transactionId].pause();
 
-                  audioPlayer = new Howl({src: ["./sounds/" + event.data.transactionFile + ".ogg"]});
-                  audioPlayer.volume(event.data.transactionVolume);
-                  audioPlayer.play();
+                    let audioPlayer = new Howl({src: ["./sounds/" + data.transactionFile + ".ogg"]});
+                    audioPlayer.volume(data.transactionVolume);
+                    audioPlayer.play();
 
+                    audioPlayers[data.transactionId] = audioPlayer;
+                },
+
+                setVolume: function(data) {
+                    if (audioPlayers[data.transactionId] === undefined) return;
+                    audioPlayers[data.transactionId].volume(data.transactionVolume);
+                },
+
+                stopSound: function(data) {
+                    if (audioPlayers[data.transactionId] === undefined) return;
+                    audioPlayers[data.transactionId].stop();
+                },
+
+                stopAll: function(data) {
+                    for (let key in audioPlayers) audioPlayers[key].stop();
+                    audioPlayers = {};
                 }
+            }
+
+            window.addEventListener('message', function(event) {
+                if(!event.data.transactionType || !eventHandlers[event.data.transactionType]) return;
+                eventHandlers[event.data.transactionType](event.data);
             });
         </script>
-    </head>
+    </body>
 </html>
