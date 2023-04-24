@@ -31,7 +31,7 @@ AddEventHandler('InteractSound_CL:PlayOnOne', function(soundFile, soundVolume)
         SendNUIMessage({
             transactionType = 'playSound',
             transactionFile  = soundFile,
-            transactionVolume = soundVolume
+            transactionVolume = soundVolume or standardVolumeOutput
         })
     end
 end)
